@@ -203,7 +203,6 @@ var Shuffler = function () {
             // don't depend on the dom - will fix
             if (currentScore > $highest.html()) {
                 $highest.html(currentScore);
-                this.printCards();
             }
             // don't depend on the dom - will fix
             if (currentScore < $lowest.html()) {

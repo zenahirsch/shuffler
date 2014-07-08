@@ -1,0 +1,41 @@
+.card-suit {
+    display: inline-block;
+    width: 5em;
+    margin: 0 0.5em;
+    text-align: center;
+}
+
+.card-num {
+    display: inline-block;
+    width: 2em;
+    text-align: center;
+    margin-right: 0.5em;
+}
+
+.hearts {
+    background-color: red;
+    color: rgb(220, 220, 220);
+}
+
+.clubs {
+    background-color: green;
+    color: rgb(220, 220, 220);
+}
+
+.diamonds {
+    background-color: blue;
+    color: rgb(220, 220, 220);
+}
+
+.spades {
+    background-color: purple;
+    color: rgb(220, 220, 220);
+}
+
+h1, h2, h3, h4 {
+    margin: 0;
+}
+
+.result {
+    margin: 2em 0;
+}

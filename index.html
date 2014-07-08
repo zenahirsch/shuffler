@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<head>
+    <title>Shuffler</title>
+    <script src="jquery-2.0.3.min.js"></script>
+    <script src="classes/shuffler.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles/shuffler.css" />
+</head>
+
+<body>
+
+    <h1>Shuffler!</h1>
+
+    <div>
+        <strong>Start Time:</strong> <span id="start-time"></span>
+    </div>
+
+    <div>
+        <strong>Num Cards:</strong> <span id="num-cards"></span>
+    </div>
+
+    <div>
+        <strong>Lowest Score:</strong> <span class="score" id="lowest-score"></span>
+    </div>
+
+    <div>
+        <strong>Highest Score:</strong> <span class="score" id="highest-score"></span>
+    </div>
+
+    <div>
+        <strong>Average:</strong> <span class="score" id="average-score"></span>
+    </div>
+
+    <div>
+        <strong>Num Shuffles:</strong> <span id="num-shuffles"></span>
+    </div>
+
+    <div>
+        <strong>Configurations:</strong>
+        <div id="configuration"></div>
+    </div>
+
+    <script>
+        var s = new Shuffler();
+        s.populateDeck();
+        s.setupInterval();
+    </script>
+
+</body>
+</html>

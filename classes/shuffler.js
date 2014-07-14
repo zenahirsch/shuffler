@@ -3,8 +3,10 @@ var Shuffler = function () {
 
     var cards = [],
         pastScores = [],
+        currentHigh = null,
+        currentLow = null,
         num = 0,
-        suits = ['hearts', 'clubs', 'diamonds', 'spades'],
+        suits = ['hearts'/*, 'clubs',  'diamonds', 'spades'*/],
         numbers = 1,
         score;
 
@@ -47,6 +49,30 @@ var Shuffler = function () {
 
         resetScore: function () {
             score = null;
+            return this;
+        },
+
+        setCurrentHigh: function (score) {
+            currentHigh = score;
+            return this;
+        },
+
+        setCurrentLow: function (score) {
+            currentLow = score;
+            return this;
+        },
+
+        getCurrentHigh: function () {
+            return currentHigh;
+        },
+
+        getCurrentLow: function () {
+            return currentLow;
+        },
+
+        resetHighLow: function () {
+            currentHigh = null;
+            currentLow = null;
             return this;
         },
 
@@ -93,11 +119,13 @@ var Shuffler = function () {
 
         populateDeck: function () {
             var c = 0,
+                numSuits = this.getSuits().length,
+                numNumbers = this.getNumNumbers(),
                 s,
                 n;
 
-            for (s = 0; s < this.getSuits().length; s += 1) {
-                for (n = 0; n < this.getNumNumbers(); n += 1) {
+            for (s = 0; s < numSuits; s += 1) {
+                for (n = 0; n < numNumbers; n += 1) {
                     this.addCard({
                         index: c,
                         suit: this.getSuits()[s],
@@ -162,24 +190,53 @@ var Shuffler = function () {
         },
 
         scoreOrder: function (callback) {
-            var offset,
+            var numCards = this.getNumCards(),
+                offset,
                 i;
 
             this.incrementNumShuffles();
             this.resetScore();
 
-            for (i = 0; i < this.getNumCards(); i += 1) {
+            for (i = 0; i < numCards; i += 1) {
                 offset = i - this.getCard(i).index;
                 this.incrementScore(Math.abs(offset));
             }
 
-            this.addNewPastScore(this.getScore());
+            this.setHighLow();
+            this.updatePastScores(this.getScore());
+
+            callback();
+        },
+
+        setHighLow: function () {
+            var currentScore = this.getScore(),
+                currentHigh = this.getCurrentHigh(),
+                currentLow = this.getCurrentLow();
+
+            if (currentScore > currentHigh || !currentHigh) {
+                console.log('A new high: ' + currentScore);
+                this.setCurrentHigh(currentScore);
+                this.printCards();
+            }
+
+            if (currentScore < currentLow || !currentLow) {
+                console.log('A new low: ' + currentScore);
+                this.setCurrentLow(currentScore);
+                this.flashLights(1);
+                this.printCards();
+            }
+
+            return this;
+        },
+
+        updatePastScores: function (score) {
+            this.addNewPastScore(score);
 
             if (this.getPastScores().length > 100) {
                 this.removeOldPastScore();
             }
 
-            callback();
+            return this;
         },
 
         updateScoreStats: function () {
@@ -188,35 +245,26 @@ var Shuffler = function () {
                 $average = $('#average-score'),
                 $numShuffles = $('#num-shuffles'),
                 $numCards = $('#num-cards'),
-                currentScore = this.getScore();
+                currentScore = this.getScore(),
+                currentHigh = this.getCurrentHigh(),
+                currentLow = this.getCurrentLow(),
+                numCards = this.getNumCards(),
+                numShuffles = this.getNumShuffles(),
+                avg = this.calculateAverage();
 
-            if (!$highest.html()) {
-                $highest.html(currentScore);
-                this.printCards();
+            if (currentHigh || !$highest.html()) {
+                $highest.html(currentHigh);
             }
 
-            if (!$lowest.html()) {
-                $lowest.html(currentScore);
-                this.printCards();
+            if (currentLow || !$lowest.html()) {
+                $lowest.html(currentLow);
             }
 
-            // don't depend on the dom - will fix
-            if (currentScore > $highest.html()) {
-                $highest.html(currentScore);
-            }
-            // don't depend on the dom - will fix
-            if (currentScore < $lowest.html()) {
-                $lowest.html(currentScore);
-                this.printCards();
-            }
+            $numCards.html(numCards);
 
-            $numCards.html(this.getNumCards());
+            $numShuffles.html(numShuffles);
 
-            $numShuffles.html(this.getNumShuffles());
-
-            if (this.getNumShuffles() % 10 === 0) {
-                $average.html(this.calculateAverage());
-            }
+            $average.html(avg);
 
             return this;
         },
@@ -232,6 +280,7 @@ var Shuffler = function () {
         printCards: function () {
             var $div = $('#num-cards-' + this.getNumCards() + ' .content'),
                 now = new Date(),
+                numCards = this.getNumCards(),
                 i;
 
             $div.empty();
@@ -240,7 +289,7 @@ var Shuffler = function () {
             $div.append('<h4>Shuffle Number ' + this.getNumShuffles() + '</h4>');
             $div.append('<h4>Score ' + this.getScore() + '</h4>');
 
-            for (i = 0; i < this.getNumCards(); i += 1) {
+            for (i = 0; i < numCards; i += 1) {
                 $div.append(this.printCard(this.getCard(i)));
                 $div.append('<br />');
             }
@@ -290,6 +339,8 @@ var Shuffler = function () {
                         that.updateScoreStats();
 
                         if (that.getScore() === 0) {
+                            console.log('Solved deck with ' + that.getNumNumbers() + ' cards. Adding another card!');
+                            that.flashLights(3);
                             clearInterval(timer);
                             that.resetScore()
                                 .clearPastScores()
@@ -304,6 +355,28 @@ var Shuffler = function () {
             }, 1);
 
             return this;
+        },
+
+        setupHueUser: function () {
+            $.ajax({
+                type: 'POST',
+                url: 'http://192.168.1.167/api',
+                data: '{ "devicetype": "shuffler", "username": "zenahirsch" }'
+            })
+                .done(function (msg) {
+                    console.log('set up user');
+                });
+        },
+
+        flashLights: function (light) {
+            $.ajax({
+                type: 'PUT',
+                url: 'http://192.168.1.167/api/zenahirsch/lights/' + light + '/state',
+                data: '{ "on": true, "bri": 0, "alert": "lselect" }'
+            })
+                .done(function (msg) {
+                    console.log('flashed lights');
+                });
         }
     };
 };
